@@ -7,12 +7,14 @@ package com.pappaspojkar.tips;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+
+import com.pappaspojkar.tips.Wrappers.Query;
+import com.pappaspojkar.tips.Wrappers.LoginRequest;
+import com.pappaspojkar.tips.Wrappers.RequestHead;
+import com.pappaspojkar.tips.Wrappers.ResponseHead;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,35 +29,79 @@ public class UserController {
     @Autowired
     UserRepo userRepo;
     
-    @GetMapping("/user")
-    public Iterable<User> getUsers(){
-        return userRepo.findAll();
+    @PostMapping("/getUsers")
+    public Query<Iterable<User>> getUsers(@RequestBody Query query){
+        return new Query<>(
+            new ResponseHead()
+                .setStatusCode(200)
+                .setToken(query.getHead().getToken()), 
+            userRepo.findAll());
     }
     
-    @GetMapping("/user/{id}")
-    public Optional<User> findByid(@PathVariable Integer id){
-        return userRepo.findById(id);
-    }
-    
-    @GetMapping("/user/login")
-    public String login(String email, String password){
-        User user = userRepo.findByEmail(email);
-        if(user == null || !Utility.MD5Encode(password).equals(user.getPassword())){
-            return "";
+    @PostMapping("/getUserById")
+    public Query<Optional<User>> findByid(@RequestBody Query<Integer> query){
+        Optional<User> user = userRepo.findById(query.getData());
+
+        String message = "";
+        Integer statusCode = 200;
+
+        if(!user.isPresent()) {
+            message = "No User Found";
+            statusCode = 412;
         }
-        String token = Utility.generateToken();
+
+        return new Query<>(
+            new ResponseHead()
+                .setToken(query.getHead().getToken())
+                .setStatusCode(statusCode)
+                .setMessage(message),
+            user);
+    }
+    
+    @PostMapping("/login")
+    public Query login(@RequestBody Query<LoginRequest> query){
+        User user = userRepo.findByEmail(query.getData().getEmail());
+        String token = query.getHead().getToken();
+        
+        if(user == null) 
+            return new Query(new ResponseHead(412, "Invalid Login", token));;
+
+        Long now = LocalDateTime.now().toEpochSecond(Utility.SERVER_OFFSET);
+
+        if(user.getLoginDeniedUntil() > now) {
+            return new Query(new ResponseHead(408, "Login is suspended", token));
+        }
+        if(!Utility.MD5Encode(query.getData().getPassword()).equals(user.getPassword())) {
+            int attempts = user.getAttemptedLogins();
+
+            if(++attempts > 2) {
+                user.setAttemptedLogins(0);
+                user.setLoginDeniedUntil(now+Utility.SECONDS_OF_LOGIN_DENIAL);
+            } else {
+                user.setAttemptedLogins(attempts);
+            }
+            userRepo.save(user);
+            return new Query(new ResponseHead(412, "Invalid Login", token));
+        }
+
+        token = Utility.generateToken();
         Long lastValidDate = LocalDateTime.now()
             .plusSeconds(Utility.SECONDS_UNTIL_AUTOMATIC_LOGOUT)
             .toEpochSecond(Utility.SERVER_OFFSET);
         
         user.setTokenLastValidDate(lastValidDate);
         user.setToken(token);
+        user.setAttemptedLogins(0);
         userRepo.save(user);
         
-        return token;
+        return new Query(
+            new ResponseHead()
+                .setToken(token)
+                .setStatusCode(200)
+        );
     }
     
-    @GetMapping("/login")
+    @PostMapping("/IsLoggedIn")
     public String isLoggedIn(String email, String token){
         if(token.isEmpty()){
             return "Not logged in";
@@ -78,23 +124,136 @@ public class UserController {
         return "logged in";
     }
     
-    @PostMapping("/user/add")
-    public User addUser(@RequestBody User user){
+    @PostMapping("/addUser")
+    public Query<User> addUser(@RequestBody Query<User> query){
+        User user = query.getData();
+
+        user = userRepo.save(
+            new User(
+                user.getName(), 
+                user.getEmail(), 
+                user.getPassword(),
+                user.getPhone(),
+                user.getNickname()));
         
-        
-       return userRepo.save(new User(user.getName(), user.getEmail(), user.getPassword(),user.getPhone(),user.getNickname()));
+       return new Query<>(
+            new ResponseHead(
+                200,
+                "",
+                query.getHead().getToken()),
+            user
+        );
     }
     
-    @PutMapping("/user/{id}")
-    public User updateUser(@PathVariable Integer id, @RequestBody User user){
-        userRepo.findById(id);
-        return userRepo.save(new User(user.getName(), user.getEmail(), user.getPassword(),user.getPhone(),user.getNickname()));
+    @PostMapping("updateUser")
+    public Query<User> updateUser(@RequestBody Query<User> query){
+        int id = ((RequestHead) query.getHead()).getUserId();
+        Optional<User> oUser = userRepo.findById(id);
+        String token = query.getHead().getToken();
+
+        if (!oUser.isPresent()) {
+            return new Query<>(
+                new ResponseHead(
+                    412,
+                    "User not found",
+                    token
+                ),
+                null
+            );
+        }
+        User user = oUser.get();
+        User newUser = query.getData();
+
+        if (isLoggedIn(user.getEmail(), token).equals("Not logged in")) {
+            return new Query<>(
+                new ResponseHead(
+                    401,
+                    "Unauthorized",
+                    token
+                ),
+                null
+            );
+        }
+
+        if (userRepo.findByEmail(newUser.getEmail()) != null) {
+            return new Query<>(
+                new ResponseHead(
+                    444,
+                    "Email is taken",
+                    token
+                ),
+                user
+            );
+        }
+        if (userRepo.findByNickname(newUser.getNickname()) != null) {
+            return new Query<>(
+                new ResponseHead(
+                    443,
+                    "Nickname is taken",
+                    token
+                ),
+                user
+            );
+        }
+
+        user.setEmail(newUser.getEmail());
+        user.setName(newUser.getName());
+        user.setNickname(newUser.getNickname());
+        user.setPhone(newUser.getPhone());
+        
+
+        userRepo.save(user);
+
+        return new Query<>(
+            new ResponseHead(
+                200,
+                "",
+                token
+            ),
+            user
+        );
     }
     
-    @DeleteMapping("user/{id}")
-    public boolean delete(@PathVariable Integer id){
+    @PostMapping("deleteUser")
+    public Query<Boolean> delete(@RequestBody Query<Integer> query){
+        int id = ((RequestHead) query.getHead()).getUserId();
+        String token = query.getHead().getToken();
+        Optional<User> oUser = userRepo.findById(id);
+
+
+        if (!oUser.isPresent()) {
+            return new Query<>(
+                new ResponseHead(
+                    412,
+                    "User not found",
+                    token
+                ),
+                null
+            );
+        }
+        User user = oUser.get();
+
+        if (isLoggedIn(user.getEmail(), token).equals("Not logged in")) {
+            return new Query<>(
+                new ResponseHead(
+                    401,
+                    "Unauthorized",
+                    token
+                ),
+                null
+            );
+        }
+        
+
         userRepo.deleteById(id);
-        return true;
+        return new Query<>(
+            new ResponseHead(
+                200,
+                "",
+                token
+            ),
+            true
+        );
     }
     
     

@@ -16,5 +16,6 @@ import org.springframework.stereotype.Repository;
 public interface UserRepo extends CrudRepository<User, Integer>{
     
     public User findByEmail(String email);
+    public User findByNickname(String nickname);
     
 }

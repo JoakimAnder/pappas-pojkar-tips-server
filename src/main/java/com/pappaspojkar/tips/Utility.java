@@ -10,8 +10,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
 
-import org.apache.tomcat.util.security.MD5Encoder;
-
 /**
  *
  * @author mehtab
@@ -19,6 +17,7 @@ import org.apache.tomcat.util.security.MD5Encoder;
 public class Utility {
     private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     public static final Integer SECONDS_UNTIL_AUTOMATIC_LOGOUT = 15*60;
+    public static final Integer SECONDS_OF_LOGIN_DENIAL = 60*60;
     public static final ZoneOffset SERVER_OFFSET = ZoneOffset.UTC;
     
 
