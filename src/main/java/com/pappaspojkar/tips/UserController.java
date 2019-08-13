@@ -6,8 +6,6 @@
 package com.pappaspojkar.tips;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  *
  * @author mehtab
+ * @author joakim
  */
 @RestController
 public class UserController {
@@ -41,20 +40,19 @@ public class UserController {
     @GetMapping("/user/login")
     public String login(String email, String password){
         User user = userRepo.findByEmail(email);
-        if(user == null || !password.equals(user.getPassword())){
+        if(user == null || !Utility.MD5Encode(password).equals(user.getPassword())){
             return "";
         }
         String token = Utility.generateToken();
-        Long tokenLastUpdate = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        Long lastValidDate = LocalDateTime.now()
+            .plusSeconds(Utility.SECONDS_UNTIL_AUTOMATIC_LOGOUT)
+            .toEpochSecond(Utility.SERVER_OFFSET);
         
-        user.setTokenLastDate(tokenLastUpdate);
+        user.setTokenLastValidDate(lastValidDate);
         user.setToken(token);
         userRepo.save(user);
-                
-        
         
         return token;
-            
     }
     
     @GetMapping("/login")
@@ -70,12 +68,12 @@ public class UserController {
             return "Not logged in";
         }
         
-       Long checkTimeStamp = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
-        if( user.getTokenLastDate() +900 < checkTimeStamp){
+       Long checkTimeStamp = LocalDateTime.now().toEpochSecond(Utility.SERVER_OFFSET);
+        if( user.getTokenLastValidDate() < checkTimeStamp){
             return "Not logged in";
         }
         
-        user.setTokenLastDate(checkTimeStamp);
+        user.setTokenLastValidDate(checkTimeStamp);
         userRepo.save(user);
         return "logged in";
     }
