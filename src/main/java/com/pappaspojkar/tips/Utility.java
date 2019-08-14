@@ -9,6 +9,8 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -33,9 +35,16 @@ public class Utility {
 
     public static String MD5Encode(String password) {
         try {
-            return new String(MessageDigest.getInstance("MD5")
-                .digest(password.concat("test")
-                .getBytes(Charset.forName("UTF-8")))); //TODO fix salt Enviroment variable
+            byte[] bytes = MessageDigest.getInstance("MD5")
+                .digest(password.concat("salt").getBytes()); //TODO fix salt Enviroment variable
+
+            StringBuilder sb = new StringBuilder();
+            for (byte b: bytes) {
+                sb.append(Integer.toString((b & 0xff)  + 0x100, 16));
+            }
+
+            return sb.toString();
+
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
 		} 

@@ -17,5 +17,7 @@ public interface UserRepo extends CrudRepository<User, Integer>{
     
     public User findByEmail(String email);
     public User findByNickname(String nickname);
-    
+    public Boolean existsByEmail(String email);
+    public Boolean existsByNickname(String nickname);
+
 }

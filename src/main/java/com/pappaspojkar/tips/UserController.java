@@ -51,10 +51,11 @@ public class UserController {
         }
 
         return new Query<>(
-            new ResponseHead()
-                .setToken(query.getHead().getToken())
-                .setStatusCode(statusCode)
-                .setMessage(message),
+            new ResponseHead(
+                    statusCode,
+                    message,
+                    query.getHead().getToken()
+            ),
             user);
     }
     
@@ -128,14 +129,35 @@ public class UserController {
     public Query<User> addUser(@RequestBody Query<User> query){
         User user = query.getData();
 
+        if(userRepo.existsByEmail(user.getEmail())) {
+            return new Query<>(
+                    new ResponseHead(
+                            444,
+                            "Email is taken",
+                            query.getHead().getToken()
+                    ),
+                    user
+            );
+        }
+        if(userRepo.existsByNickname(user.getNickname())) {
+            return new Query<> (
+                    new ResponseHead(
+                            443,
+                            "Nickname is taken",
+                            query.getHead().getToken()
+                    ),
+                    user
+            );
+        }
+
         user = userRepo.save(
             new User(
-                user.getName(), 
-                user.getEmail(), 
+                user.getName(),
+                user.getEmail(),
                 user.getPassword(),
                 user.getPhone(),
                 user.getNickname()));
-        
+
        return new Query<>(
             new ResponseHead(
                 200,
@@ -195,12 +217,15 @@ public class UserController {
                 user
             );
         }
+        if(newUser.getName() != null)
+            user.setName(newUser.getName());
+        if(newUser.getNickname() != null)
+            user.setNickname(newUser.getNickname());
+        if(newUser.getPhone() != null)
+            user.setPhone(newUser.getPhone());
+        if(newUser.getEmail() != null)
+            user.setEmail(newUser.getEmail());
 
-        user.setEmail(newUser.getEmail());
-        user.setName(newUser.getName());
-        user.setNickname(newUser.getNickname());
-        user.setPhone(newUser.getPhone());
-        
 
         userRepo.save(user);
 
@@ -217,6 +242,17 @@ public class UserController {
     @PostMapping("deleteUser")
     public Query<Boolean> delete(@RequestBody Query<Integer> query){
         int id = ((RequestHead) query.getHead()).getUserId();
+
+        if(id != query.getData())
+            return new Query<>(
+                    new ResponseHead(
+                            401,
+                            "Unauthorized to delete another's account",
+                            query.getHead().getToken()
+                    ),
+                    false
+            );
+
         String token = query.getHead().getToken();
         Optional<User> oUser = userRepo.findById(id);
 
