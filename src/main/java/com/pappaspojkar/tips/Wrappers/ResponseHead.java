@@ -3,15 +3,25 @@ package com.pappaspojkar.tips.Wrappers;
 public class ResponseHead extends Head {
 
     private Integer statusCode;
+    private Boolean successful;
     private String message;
 
     public ResponseHead() {
     }
 
-    public ResponseHead(Integer statusCode, String message, String token) {
+    public ResponseHead(Integer statusCode, String message, boolean successful, String token) {
         super(token);
         this.statusCode = statusCode;
         this.message = message;
+        this.successful = successful;
+    }
+
+    public Boolean getSuccessful() {
+        return successful;
+    }
+
+    public void setSuccessful(Boolean successful) {
+        this.successful = successful;
     }
 
     public Integer getStatusCode() {
