@@ -1,13 +1,15 @@
-package com.pappaspojkar.tips;
+package com.pappaspojkar.tips.wrapper;
 
-public class RequestHead extends Head{
+public class RequestHead {
 
     private Integer userId;
     private String token;
 
+
     public RequestHead(Integer userId, String token) {
-        this.userId = userId;
         this.token = token;
+        this.userId = userId;
+
     }
 
     public RequestHead() {

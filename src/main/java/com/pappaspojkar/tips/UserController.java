@@ -7,8 +7,9 @@ package com.pappaspojkar.tips;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Optional;
+
+import com.pappaspojkar.tips.wrapper.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
 
 /**
  *
@@ -79,10 +81,36 @@ public class UserController {
         userRepo.save(user);
         return "logged in";
     }
+
+    @PostMapping("/addUser")
+    public void addUser2(@RequestBody Query query){
+
+        System.out.println(query.getData());
+        userRepo.save(query.getData().getUser());
+        Query responseQuery = new Query();
+        // responseQuery.setHead(
+
+               // new ResponseHead(query.getHead()));
+    }
+    @PostMapping("/addUser3")
+    public void addUser3(@RequestBody Query query){
+
+        System.out.println(query.getData());
+        userRepo.save(query.getData().getUser());
+        Query responseQuery = new Query();
+       // responseQuery.setHead(
+
+            //    new ResponseHead(query.getHead()));
+    }
     
     @PostMapping("/user/add")
     public User addUser(@RequestBody User user){
-        
+        if(userRepo.findByEmail(user.getEmail()) != null){
+            throw new RuntimeException("Email already exist");
+        }
+        if(userRepo.findByNickname(user.getNickname()) != null){
+            throw new RuntimeException("Nickname already taken");
+        }
         
        return userRepo.save(new User(user.getName(), user.getEmail(), user.getPassword(),user.getPhone(),user.getNickname()));
     }

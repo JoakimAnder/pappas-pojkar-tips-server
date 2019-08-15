@@ -1,25 +1,19 @@
-package com.pappaspojkar.tips;
+package com.pappaspojkar.tips.wrapper;
 
-public class ResponseHead extends Head{
-    private String token;
+public class ResponseHead {
+
     private Integer  statusCode;
+    private boolean successful;
     private String message;
 
-    public ResponseHead(String token, Integer statusCode, String message) {
-        this.token = token;
+    public ResponseHead( Integer statusCode, String message, boolean successful) {
+
         this.statusCode = statusCode;
         this.message = message;
+        this.successful = successful;
     }
 
     public ResponseHead() {
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
     }
 
     public Integer getStatusCode() {
@@ -28,6 +22,14 @@ public class ResponseHead extends Head{
 
     public void setStatusCode(Integer statusCode) {
         this.statusCode = statusCode;
+    }
+
+    public boolean isSuccessful() {
+        return successful;
+    }
+
+    public void setSuccessful(boolean successful) {
+        this.successful = successful;
     }
 
     public String getMessage() {
