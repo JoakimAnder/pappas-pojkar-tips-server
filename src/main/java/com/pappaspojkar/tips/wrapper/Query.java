@@ -1,32 +1,21 @@
-package com.pappaspojkar.tips;
+package com.pappaspojkar.tips.wrapper;
 
-import com.pappaspojkar.tips.wrapper.Head;
+public class Query<E> {
 
-public class Query {
-    private Head head;
-    private Data data;
+    private E data;
 
-
-    public Query(Head head) {
-        this.head = head;
+    public Query(E data) {
+        this.data = data;
     }
 
     public Query() {
     }
 
-    public Head getHead() {
-        return head;
-    }
-
-    public void setHead(Head head) {
-        this.head = head;
-    }
-
-    public Data getData() {
+    public E getData() {
         return data;
     }
 
-    public void setData(Data data) {
+    public void setData(E data) {
         this.data = data;
     }
 }
