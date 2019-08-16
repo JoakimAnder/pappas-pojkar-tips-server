@@ -50,18 +50,19 @@ public class UserController {
 
         User user = userRepo.findByEmail(query.getData().getEmail());
 
-        if(user == null)
+        if(user == null) //User with given email not found
             return Response.createResponse(413, "Invalid login", false, null);
 
         Long now = LocalDateTime.now().toEpochSecond(Utility.SERVER_OFFSET);
 
-        if(user.getLoginDeniedUntil() > now)
+        if(user.getLoginDeniedUntil() > now) //User has been suspended
             return Response.createResponse(408, "Login is suspended", false, null);
 
-        if(!Utility.MD5Encode(query.getData().getPassword()).equals(user.getPassword())) {
+        if(!Utility.MD5Encode(query.getData().getPassword()).equals(user.getPassword())) { //Password doesn't match
             int attempts = user.getAttemptedLogins();
 
             if(++attempts > 2) {
+                //If User has over 3 failed attempts, suspend account
                 user.setAttemptedLogins(0);
                 user.setLoginDeniedUntil(now+Utility.SECONDS_OF_LOGIN_DENIAL);
             } else {
