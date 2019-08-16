@@ -51,7 +51,7 @@ public class UserController {
         User user = userRepo.findByEmail(query.getData().getEmail());
 
         if(user == null)
-            return Response.createResponse(412, "Invalid login", false, null);
+            return Response.createResponse(413, "Invalid login", false, null);
 
         Long now = LocalDateTime.now().toEpochSecond(Utility.SERVER_OFFSET);
 
@@ -68,7 +68,7 @@ public class UserController {
                 user.setAttemptedLogins(attempts);
             }
             userRepo.save(user);
-            return Response.createResponse(412, "Invalid Login", false, null);
+            return Response.createResponse(413, "Invalid Login", false, null);
         }
 
         String token = Utility.generateToken();
@@ -141,7 +141,7 @@ public class UserController {
         User user = oUser.get();
 
         if (isLoggedIn(user.getEmail(), query.getHead().getToken()).equals("Not logged in")) { //TODO fix isLoggedIn
-            return Response.createResponse(401, "Unauthorized", false, null);
+            return Response.createResponse(401, "Not logged in", false, null);
         }
 
         if (userRepo.findByEmail(newUser.getEmail()) != null) {
@@ -170,7 +170,7 @@ public class UserController {
         int id = query.getHead().getUserId();
 
         if(id != query.getData())
-            return Response.createResponse(401, "Unauthorized to delete another's account", false, false);
+            return Response.createResponse(462, "Unauthorized to delete another's account", false, false);
 
         String token = query.getHead().getToken();
         Optional<User> oUser = userRepo.findById(id);
@@ -182,7 +182,7 @@ public class UserController {
         User user = oUser.get();
 
         if (isLoggedIn(user.getEmail(), token).equals("Not logged in")) {
-            return Response.createResponse(401, "Unauthorized", false, false);
+            return Response.createResponse(401, "Not logged in", false, false);
         }
 
 
