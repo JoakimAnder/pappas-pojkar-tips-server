@@ -87,7 +87,7 @@ response = {
     success: Boolean,
     message: check docs
   },
-  data: "token"
+  data: User
 }
 
 

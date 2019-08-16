@@ -46,7 +46,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/login")
-    public Response<String> login(@RequestBody Request<LoginRequest> query){
+    public Response<User> login(@RequestBody Request<LoginRequest> query){
 
         User user = userRepo.findByEmail(query.getData().getEmail());
 
@@ -78,9 +78,9 @@ public class UserController {
         user.setLastLogin(now);
         user.setTokenLastValidDate(now+Utility.SECONDS_UNTIL_AUTOMATIC_LOGOUT);
         user.setAttemptedLogins(0);
-        userRepo.save(user);
+        user = userRepo.save(user);
 
-        return Response.createSuccessfulResponse(token);
+        return Response.createSuccessfulResponse(user);
 
     }
 
