@@ -1,14 +1,15 @@
 package com.pappaspojkar.tips.Wrappers;
 
-public class RequestHead extends Head {
+public class RequestHead {
 
     private Integer userId;
+    private String token;
 
     public RequestHead() {
     }
 
     public RequestHead(String token, Integer userId) {
-        super(token);
+        this.token = token;
         this.userId = userId;
     }
 
@@ -16,20 +17,15 @@ public class RequestHead extends Head {
         return userId;
     }
 
-    public RequestHead setUserId(Integer userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
-        return this;
     }
 
-    @Override
-    public RequestHead setToken(String token) {
-        super.setToken(token);
-        return this;
+    public String getToken() {
+        return token;
     }
-    
 
-
-    
-
-    
+    public void setToken(String token) {
+        this.token = token;
+    }
 }

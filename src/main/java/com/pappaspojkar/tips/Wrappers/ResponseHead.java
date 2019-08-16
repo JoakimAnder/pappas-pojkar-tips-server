@@ -1,6 +1,6 @@
 package com.pappaspojkar.tips.Wrappers;
 
-public class ResponseHead extends Head {
+public class ResponseHead {
 
     private Integer statusCode;
     private Boolean successful;
@@ -9,8 +9,7 @@ public class ResponseHead extends Head {
     public ResponseHead() {
     }
 
-    public ResponseHead(Integer statusCode, String message, boolean successful, String token) {
-        super(token);
+    public ResponseHead(Integer statusCode, String message, boolean successful) {
         this.statusCode = statusCode;
         this.message = message;
         this.successful = successful;
@@ -28,24 +27,16 @@ public class ResponseHead extends Head {
         return statusCode;
     }
 
-    public ResponseHead setStatusCode(Integer statusCode) {
+    public void setStatusCode(Integer statusCode) {
         this.statusCode = statusCode;
-        return this;
     }
 
     public String getMessage() {
         return message;
     }
 
-    public ResponseHead setMessage(String message) {
+    public void setMessage(String message) {
         this.message = message;
-        return this;
-    }
-
-    @Override
-    public ResponseHead setToken(String token) {
-        super.setToken(token);
-        return this;
     }
 
     
