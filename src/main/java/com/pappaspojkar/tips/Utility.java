@@ -5,62 +5,62 @@
  */
 package com.pappaspojkar.tips;
 
-import org.apache.tomcat.util.security.MD5Encoder;
-
-import sun.security.provider.MD5;
-
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 
 /**
  *
  * @author mehtab
  */
 public class Utility {
-    private static final String ALPHA_NUMERIC_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-    public static void main(String[] args) {
+    private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    public static final Integer SECONDS_UNTIL_AUTOMATIC_LOGOUT = 15*60;
+    public static final Integer SECONDS_OF_LOGIN_DENIAL = 60*60;
+    public static final ZoneOffset SERVER_OFFSET = ZoneOffset.UTC;
 
-        System.out.println(encodeMD5("hej"));
 
-
+    /** Generates a token, used to authenticate a login attempt.
+     *
+     * @return The generated token. Should be sent to DB and to the client.
+     */
+    public static String generateToken() {
+        int count = 20;
+        StringBuilder builder = new StringBuilder();
+        while (count-- != 0) {
+            int character = (int) (Math.random() * ALPHA_NUMERIC_STRING.length());
+            builder.append(ALPHA_NUMERIC_STRING.charAt(character));
+        }
+        return builder.toString();
     }
 
-
-
-    
-public static String generateToken() {
-    int count = 20;
-StringBuilder builder = new StringBuilder();
-while (count-- != 0) {
-int character = (int)(Math.random()*ALPHA_NUMERIC_STRING.length());
-builder.append(ALPHA_NUMERIC_STRING.charAt(character));
-}
-return builder.toString();
-}
-
-    public static String encodeMD5(String password)  {
-        MessageDigest md = null;
+    /** Encodes a String using MD5 and some salt.
+     *  Should be used on every password... EVER!
+     *
+     * @param password Input which should be encoded.
+     * @return  Encoded String
+     */
+    public static String MD5Encode(String password) {
         try {
-            // Create MessageDigest instance for MD5
-            md = MessageDigest.getInstance("MD5");
-
-
-            //Get the hash's bytes
-            byte [] bytes = md.digest(password.concat("salt").getBytes());
+            byte[] bytes = MessageDigest.getInstance("MD5")
+                .digest(password.concat("salt").getBytes()); //TODO fix salt Enviroment variable
 
             StringBuilder sb = new StringBuilder();
-            for(int i=0; i< bytes.length ;i++)
-            {
-                sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+            for (byte b: bytes) {
+                sb.append(Integer.toString((b & 0xff)  + 0x100, 16));
             }
-            password = sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
 
-        return password;
+            return sb.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+		} 
+
     }
 
 

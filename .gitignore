@@ -4,6 +4,9 @@ target/
 !**/src/main/**
 !**/src/test/**
 
+
+/src/main/resources/EnviromentVariables.java
+
 ### STS ###
 .apt_generated
 .classpath
