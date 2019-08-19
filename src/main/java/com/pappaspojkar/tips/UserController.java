@@ -22,53 +22,54 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class UserController {
-    
+
     @Autowired
     UserRepo userRepo;
-    
+
     @PostMapping("/getUsers")
-    public ResponseQuery<Iterable<User>> getUsers(@RequestBody RequestQuery<Exception> query){
-        return query.createSuccessfulResponseQuery(userRepo.findAll());
+    public Response<Iterable<User>> getUsers(){
+        return Response.createSuccessfulResponse(userRepo.findAll());
     }
-    
+
     @PostMapping("/getUserById")
-    public ResponseQuery<Optional<User>> findByid(@RequestBody RequestQuery<Integer> query){
+    public Response<Optional<User>> findByid(@RequestBody Request<Integer> query){
         Optional<User> user = userRepo.findById(query.getData());
 
         return (user.isPresent())
-                ? query.createSuccessfulResponseQuery(user)
-                : query.createResponseQuery(
-                        412,
+                ? Response.createSuccessfulResponse(user)
+                : Response.createResponse(
+                412,
                 "User not found",
                 false,
-                user
-        );
+                            user);
 
     }
-    
-    @PostMapping("/login")
-    public ResponseQuery<String> login(@RequestBody RequestQuery<LoginRequest> query){
+
+    @PostMapping(value = "/login")
+    public Response<User> login(@RequestBody Request<LoginRequest> query){
+
         User user = userRepo.findByEmail(query.getData().getEmail());
-        
-        if(user == null)
-            return query.createResponseQuery(412, "Invalid login", false, null);
+
+        if(user == null) //User with given email not found
+            return Response.createResponse(413, "Invalid login", false, null);
 
         Long now = LocalDateTime.now().toEpochSecond(Utility.SERVER_OFFSET);
 
-        if(user.getLoginDeniedUntil() > now)
-            return query.createResponseQuery(408, "Login is suspended", false, null);
+        if(user.getLoginDeniedUntil() > now) //User has been suspended
+            return Response.createResponse(408, "Login is suspended", false, null);
 
-        if(!Utility.MD5Encode(query.getData().getPassword()).equals(user.getPassword())) {
+        if(!Utility.MD5Encode(query.getData().getPassword()).equals(user.getPassword())) { //Password doesn't match
             int attempts = user.getAttemptedLogins();
 
             if(++attempts > 2) {
+                //If User has over 3 failed attempts, suspend account
                 user.setAttemptedLogins(0);
                 user.setLoginDeniedUntil(now+Utility.SECONDS_OF_LOGIN_DENIAL);
             } else {
                 user.setAttemptedLogins(attempts);
             }
             userRepo.save(user);
-            return query.createResponseQuery(412, "Invalid Login", false, null);
+            return Response.createResponse(413, "Invalid Login", false, null);
         }
 
         String token = Utility.generateToken();
@@ -77,13 +78,13 @@ public class UserController {
         user.setLastLogin(now);
         user.setTokenLastValidDate(now+Utility.SECONDS_UNTIL_AUTOMATIC_LOGOUT);
         user.setAttemptedLogins(0);
-        userRepo.save(user);
+        user = userRepo.save(user);
 
-        return query.createSuccessfulResponseQuery(token, token);
+        return Response.createSuccessfulResponse(user);
 
     }
-    
-    @PostMapping("/IsLoggedIn")
+
+    @PostMapping("/IsLoggedIn") //TODO remove
     public String isLoggedIn(String email, String token){
         if(token.isEmpty()){
             return "Not logged in";
@@ -95,59 +96,60 @@ public class UserController {
         if(!token.equals(user.getToken())){
             return "Not logged in";
         }
-        
-       Long checkTimeStamp = LocalDateTime.now().toEpochSecond(Utility.SERVER_OFFSET);
+
+        Long checkTimeStamp = LocalDateTime.now().toEpochSecond(Utility.SERVER_OFFSET);
         if(user.getTokenLastValidDate() < checkTimeStamp){
             return "Not logged in";
         }
-        
+
         user.setTokenLastValidDate(checkTimeStamp+Utility.SECONDS_UNTIL_AUTOMATIC_LOGOUT);
         userRepo.save(user);
         return "logged in";
     }
-    
+
     @PostMapping("/addUser")
-    public ResponseQuery<User> addUser(@RequestBody RequestQuery<User> query){
+    public Response<User> addUser(@RequestBody Request<User> query){
         User user = query.getData();
 
         if(userRepo.existsByEmail(user.getEmail())) {
-            return query.createResponseQuery(444, "Email is taken", false, user);
+            return Response.createResponse(444, "Email is taken", false, user);
         }
         if(userRepo.existsByNickname(user.getNickname())) {
-            return query.createResponseQuery(443, "Nickname is taken", false, user);
+            return Response.createResponse(443, "Nickname is taken", false, user);
         }
 
         user = userRepo.save(
-            new User(
-                user.getName(),
-                user.getEmail(),
-                user.getPassword(),
-                user.getPhone(),
-                user.getNickname()));
+                new User(
+                        user.getName(),
+                        user.getEmail(),
+                        user.getPassword(),
+                        user.getPhone(),
+                        user.getNickname()));
 
-            return query.createSuccessfulResponseQuery(user);
+        return Response.createSuccessfulResponse(user);
     }
-    
+
     @PostMapping("updateUser")
-    public ResponseQuery<User> updateUser(@RequestBody RequestQuery<User> query){
+    public Response<User> updateUser(@RequestBody Request<User> query){
         int id = query.getHead().getUserId();
         Optional<User> oUser = userRepo.findById(id);
 
         if (!oUser.isPresent()) {
-            return query.createResponseQuery(412, "User not found", false, null);
+            return Response.createResponse(412, "User not found", false, null);
         }
-        User user = oUser.get();
+
         User newUser = query.getData();
+        User user = oUser.get();
 
         if (isLoggedIn(user.getEmail(), query.getHead().getToken()).equals("Not logged in")) { //TODO fix isLoggedIn
-            return query.createResponseQuery(401, "Unauthorized", false, null);
+            return Response.createResponse(401, "Not logged in", false, null);
         }
 
         if (userRepo.findByEmail(newUser.getEmail()) != null) {
-            return query.createResponseQuery(444, "Email is taken", false, user);
+            return Response.createResponse(444, "Email is taken", false, user);
         }
         if (userRepo.findByNickname(newUser.getNickname()) != null) {
-            return query.createResponseQuery(443, "Nickname is taken", false, user);
+            return Response.createResponse(443, "Nickname is taken", false, user);
         }
         if(newUser.getName() != null)
             user.setName(newUser.getName());
@@ -161,33 +163,33 @@ public class UserController {
 
         user = userRepo.save(user);
 
-        return query.createSuccessfulResponseQuery(user);
+        return Response.createSuccessfulResponse(user);
     }
-    
+
     @PostMapping("deleteUser")
-    public ResponseQuery<Boolean> delete(@RequestBody RequestQuery<Integer> query){
+    public Response<Boolean> delete(@RequestBody Request<Integer> query){
         int id = query.getHead().getUserId();
 
         if(id != query.getData())
-            return query.createResponseQuery(401, "Unauthorized to delete another's account", false, false);
+            return Response.createResponse(462, "Unauthorized to delete another's account", false, false);
 
         String token = query.getHead().getToken();
         Optional<User> oUser = userRepo.findById(id);
 
 
         if (!oUser.isPresent()) {
-            return query.createResponseQuery(412, "User not found", false, false);
+            return Response.createResponse(412, "User not found", false, false);
         }
         User user = oUser.get();
 
         if (isLoggedIn(user.getEmail(), token).equals("Not logged in")) {
-            return query.createResponseQuery(401, "Unauthorized", false, false);
+            return Response.createResponse(401, "Not logged in", false, false);
         }
-        
+
 
         userRepo.deleteById(id);
-        return query.createSuccessfulResponseQuery(true);
+        return Response.createSuccessfulResponse(true);
     }
-    
-    
+
+
 }

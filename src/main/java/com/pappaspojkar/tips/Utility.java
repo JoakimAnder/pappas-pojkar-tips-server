@@ -21,8 +21,12 @@ public class Utility {
     public static final Integer SECONDS_UNTIL_AUTOMATIC_LOGOUT = 15*60;
     public static final Integer SECONDS_OF_LOGIN_DENIAL = 60*60;
     public static final ZoneOffset SERVER_OFFSET = ZoneOffset.UTC;
-    
 
+
+    /** Generates a token, used to authenticate a login attempt.
+     *
+     * @return The generated token. Should be sent to DB and to the client.
+     */
     public static String generateToken() {
         int count = 20;
         StringBuilder builder = new StringBuilder();
@@ -33,6 +37,12 @@ public class Utility {
         return builder.toString();
     }
 
+    /** Encodes a String using MD5 and some salt.
+     *  Should be used on every password... EVER!
+     *
+     * @param password Input which should be encoded.
+     * @return  Encoded String
+     */
     public static String MD5Encode(String password) {
         try {
             byte[] bytes = MessageDigest.getInstance("MD5")
