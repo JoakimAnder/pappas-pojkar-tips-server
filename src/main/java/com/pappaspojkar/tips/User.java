@@ -1,5 +1,6 @@
 package com.pappaspojkar.tips;
 
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -11,6 +12,7 @@ import org.hibernate.validator.constraints.Length;
 
 import java.io.Serializable;
 
+
 @Entity
 public class User implements Serializable {
 
@@ -21,22 +23,25 @@ public class User implements Serializable {
     @NotNull
     @Length(max = 50)
     private String name;
+
     @NotNull
     @Length(max = 100)
     @Column(unique = true)
     private String email;
+  
     @NotNull
-    @Length(min = 7, max = 100)
+    @Length(max = 100)
     private String password;
+  
     @NotNull
     @Length(max = 20)
     private String phone;
+
     @NotNull
     @Length(max = 20)
     @Column(unique = true)
     private String nickname;
-
-    
+  
     @NotNull
     private Integer payStatus;
     @NotNull
@@ -56,7 +61,9 @@ public class User implements Serializable {
     public User(String name, String email, String password, String phone, String nickname) {
         this.name = name;
         this.email = email;
+
         this.password = Utility.MD5Encode(password);
+
         this.phone = phone;
         this.nickname = nickname;
 

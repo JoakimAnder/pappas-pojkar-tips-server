@@ -6,14 +6,17 @@
 package com.pappaspojkar.tips;
 
 import java.time.LocalDateTime;
+
 import java.util.Optional;
 
 import com.pappaspojkar.tips.Wrappers.*;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
 
 /**
  *
@@ -108,6 +111,7 @@ public class UserController {
     }
 
     @PostMapping("/addUser")
+
     public Response<User> addUser(@RequestBody Request<User> query){
         User user = query.getData();
 
@@ -127,6 +131,7 @@ public class UserController {
                         user.getNickname()));
 
         return Response.createSuccessfulResponse(user);
+
     }
 
     @PostMapping("updateUser")

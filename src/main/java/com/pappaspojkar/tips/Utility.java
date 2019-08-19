@@ -12,11 +12,13 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+
 /**
  *
  * @author mehtab
  */
 public class Utility {
+
     private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     public static final Integer SECONDS_UNTIL_AUTOMATIC_LOGOUT = 15*60;
     public static final Integer SECONDS_OF_LOGIN_DENIAL = 60*60;
@@ -58,7 +60,10 @@ public class Utility {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
 		} 
+
     }
 
 
 }
+
+
