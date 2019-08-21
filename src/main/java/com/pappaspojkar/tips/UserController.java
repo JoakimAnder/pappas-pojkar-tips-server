@@ -111,24 +111,50 @@ public class UserController {
     }
 
     @PostMapping("/addUser")
-
     public Response<User> addUser(@RequestBody Request<User> query){
         User user = query.getData();
 
-        if(userRepo.existsByEmail(user.getEmail())) {
+        String name = user.getName();
+        String email = user.getEmail();
+        String phone = user.getPhone();
+        String nickname = user.getNickname();
+        String password = user.getPassword();
+
+        // Null/Empty checks
+        if(name == null || name.isEmpty())
+            return Response.createResponse(001, "Name is required", false, user);
+        if(email == null || email.isEmpty())
+            return Response.createResponse(002, "Email is required", false, user);
+        if(phone == null || phone.isEmpty())
+            return Response.createResponse(003, "Phone is required", false, user);
+        if(password == null || password.isEmpty())
+            return Response.createResponse(004, "Password is required", false, user);
+
+        // Nickname is optional, if empty, generate one.
+        if(nickname == null || nickname.isEmpty()) {
+            nickname = name;
+            int i = 1;
+            while(userRepo.existsByNickname(nickname+i)){
+                i++;
+            }
+            nickname += i;
+        }
+
+
+        if(userRepo.existsByEmail(email)) {
             return Response.createResponse(444, "Email is taken", false, user);
         }
-        if(userRepo.existsByNickname(user.getNickname())) {
+        if(userRepo.existsByNickname(nickname)) {
             return Response.createResponse(443, "Nickname is taken", false, user);
         }
 
         user = userRepo.save(
                 new User(
-                        user.getName(),
-                        user.getEmail(),
-                        user.getPassword(),
-                        user.getPhone(),
-                        user.getNickname()));
+                        name,
+                        email,
+                        password,
+                        phone,
+                       nickname));
 
         return Response.createSuccessfulResponse(user);
 
