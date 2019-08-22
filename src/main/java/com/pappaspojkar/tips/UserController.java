@@ -122,13 +122,13 @@ public class UserController {
 
         // Null/Empty checks
         if(name == null || name.isEmpty())
-            return Response.createResponse(001, "Name is required", false, user);
+            return Response.createResponse(430, "Name is required", false, user);
         if(email == null || email.isEmpty())
-            return Response.createResponse(002, "Email is required", false, user);
+            return Response.createResponse(434, "Email is required", false, user);
         if(phone == null || phone.isEmpty())
-            return Response.createResponse(003, "Phone is required", false, user);
+            return Response.createResponse(431, "Phone is required", false, user);
         if(password == null || password.isEmpty())
-            return Response.createResponse(004, "Password is required", false, user);
+            return Response.createResponse(432, "Password is required", false, user);
 
         // Nickname is optional, if empty, generate one.
         if(nickname == null || nickname.isEmpty()) {
