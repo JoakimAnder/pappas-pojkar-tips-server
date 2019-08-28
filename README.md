@@ -16,6 +16,9 @@ Status codes:
 434 "Email is required"
 443 "Nickname is taken"
 444 "Email is taken"
+450 "Name isn't valid, try [regex]"
+451 "Phone isn't valid, try [regex]"
+454 "Email isn't valid, try [regex]"
 462 "Unauthorized to delete another's account"
 
 
