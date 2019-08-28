@@ -10,8 +10,12 @@ Status codes:
 412 "User not found"
 413 "Invalid login"
 408 "Login is suspended"
-444 "Email is taken"
+430 "Name is required"
+431 "Phone is required"
+432 "Password is required"
+434 "Email is required"
 443 "Nickname is taken"
+444 "Email is taken"
 462 "Unauthorized to delete another's account"
 
 
