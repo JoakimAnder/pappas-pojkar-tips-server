@@ -6,7 +6,7 @@ Status codes:
 
 401 "Not logged in" // Redirect to login screen
 
-
+400 "Request not found, try {head:{}, data:{}}"
 412 "User not found"
 413 "Invalid login"
 408 "Login is suspended"

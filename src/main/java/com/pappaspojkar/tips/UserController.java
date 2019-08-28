@@ -29,6 +29,22 @@ public class UserController {
     @Autowired
     UserRepo userRepo;
 
+    private <E> boolean checkRequest(Request<E> query, boolean head, boolean data) {
+        if(query == null)
+            return false;
+        if(head) {
+            if(query.getHead() == null)
+                return false;
+        }
+
+        if(data){
+            if(query.getData() == null)
+                return false;
+        }
+        return true;
+    }
+
+
     @PostMapping("/getUsers")
     public Response<Iterable<User>> getUsers(){
         return Response.createSuccessfulResponse(userRepo.findAll());
@@ -36,6 +52,9 @@ public class UserController {
 
     @PostMapping("/getUserById")
     public Response<Optional<User>> findByid(@RequestBody Request<Integer> query){
+        if(!checkRequest(query, false, true))
+            return Response.createResponse(400, "Request not found, try {data:int}", false, null);
+
         Optional<User> user = userRepo.findById(query.getData());
 
         return (user.isPresent())
@@ -48,8 +67,13 @@ public class UserController {
 
     }
 
+
+
     @PostMapping(value = "/login")
     public Response<User> login(@RequestBody Request<LoginRequest> query){
+        if(!checkRequest(query, false, true))
+            return Response.createResponse(400, "Request not found, try {data:User}", false, null);
+
 
         User user = userRepo.findByEmail(query.getData().getEmail());
 
@@ -112,6 +136,9 @@ public class UserController {
 
     @PostMapping("/addUser")
     public Response<User> addUser(@RequestBody Request<User> query){
+        if(!checkRequest(query, false, true))
+            return Response.createResponse(400, "Request not found, try {data:User}", false, null);
+
         User user = query.getData();
 
         String name = user.getName();
