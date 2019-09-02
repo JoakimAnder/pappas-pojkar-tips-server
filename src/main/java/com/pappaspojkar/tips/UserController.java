@@ -29,6 +29,22 @@ public class UserController {
     @Autowired
     UserRepo userRepo;
 
+    private <E> boolean checkRequest(Request<E> query, boolean head, boolean data) {
+        if(query == null)
+            return false;
+        if(head) {
+            if(query.getHead() == null)
+                return false;
+        }
+
+        if(data){
+            if(query.getData() == null)
+                return false;
+        }
+        return true;
+    }
+
+
     @PostMapping("/getUsers")
     public Response<Iterable<User>> getUsers(){
         return Response.createSuccessfulResponse(userRepo.findAll());
@@ -36,6 +52,9 @@ public class UserController {
 
     @PostMapping("/getUserById")
     public Response<Optional<User>> findByid(@RequestBody Request<Integer> query){
+        if(!checkRequest(query, false, true))
+            return Response.createResponse(400, "Request not found, try {data:int}", false, null);
+
         Optional<User> user = userRepo.findById(query.getData());
 
         return (user.isPresent())
@@ -48,8 +67,13 @@ public class UserController {
 
     }
 
+
+
     @PostMapping(value = "/login")
     public Response<User> login(@RequestBody Request<LoginRequest> query){
+        if(!checkRequest(query, false, true))
+            return Response.createResponse(400, "Request not found, try {data:User}", false, null);
+
 
         User user = userRepo.findByEmail(query.getData().getEmail());
 
@@ -89,6 +113,9 @@ public class UserController {
 
     @PostMapping("/addUser")
     public Response<User> addUser(@RequestBody Request<User> query){
+        if(!checkRequest(query, false, true))
+            return Response.createResponse(400, "Request not found, try {data:User}", false, null);
+
         User user = query.getData();
 
         String name = user.getName();
@@ -100,12 +127,21 @@ public class UserController {
         // Null/Empty checks
         if(name == null || name.isEmpty())
             return Response.createResponse(430, "Name is required", false, user);
-        if(email == null || email.isEmpty())
-            return Response.createResponse(434, "Email is required", false, user);
         if(phone == null || phone.isEmpty())
             return Response.createResponse(431, "Phone is required", false, user);
         if(password == null || password.isEmpty())
             return Response.createResponse(432, "Password is required", false, user);
+        if(email == null || email.isEmpty())
+            return Response.createResponse(434, "Email is required", false, user);
+
+        // Validate email/name/phone
+        if(!Utility.isValidFullName(name))
+            return Response.createResponse(450, "Name isn't valid, try "+Utility.VALID_FULL_NAME_REGEX.pattern(), false, user);
+        if(!Utility.isValidPhone(phone))
+            return Response.createResponse(451, "Phone isn't valid, try "+Utility.VALID_PHONE_REGEX.pattern(), false, user);
+        if(!Utility.isValidEmail(email))
+            return Response.createResponse(454, "Email isn't valid, try "+Utility.VALID_EMAIL_ADDRESS_REGEX.pattern(), false, user);
+
 
         // Nickname is optional, if empty, generate one.
         if(nickname == null || nickname.isEmpty()) {
@@ -115,15 +151,15 @@ public class UserController {
                 i++;
             }
             nickname += i;
+        } else if (userRepo.existsByNickname(nickname)) {
+            return Response.createResponse(443, "Nickname is taken", false, user);
         }
 
 
         if(userRepo.existsByEmail(email)) {
             return Response.createResponse(444, "Email is taken", false, user);
         }
-        if(userRepo.existsByNickname(nickname)) {
-            return Response.createResponse(443, "Nickname is taken", false, user);
-        }
+
 
         user = userRepo.save(
                 new User(
@@ -131,7 +167,7 @@ public class UserController {
                         email,
                         password,
                         phone,
-                       nickname));
+                        nickname));
 
         return Response.createSuccessfulResponse(user);
 
