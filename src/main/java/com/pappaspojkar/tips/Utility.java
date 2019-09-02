@@ -10,6 +10,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -23,6 +25,14 @@ public class Utility {
     public static final Integer SECONDS_UNTIL_AUTOMATIC_LOGOUT = 15*60;
     public static final Integer SECONDS_OF_LOGIN_DENIAL = 60*60;
     public static final ZoneOffset SERVER_OFFSET = ZoneOffset.UTC;
+
+    public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
+            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+    public static final Pattern VALID_FULL_NAME_REGEX =
+            Pattern.compile("^[a-zA-z ]*$", Pattern.CASE_INSENSITIVE);
+
+    public static final Pattern VALID_PHONE_REGEX =
+            Pattern.compile("^[0-9]{10,13}$", Pattern.CASE_INSENSITIVE);
 
 
     /** Generates a token, used to authenticate a login attempt.
@@ -48,7 +58,7 @@ public class Utility {
     public static String MD5Encode(String password) {
         try {
             byte[] bytes = MessageDigest.getInstance("MD5")
-                .digest(password.concat("salt").getBytes()); //TODO fix salt Enviroment variable
+                    .digest(password.concat("salt").getBytes()); //TODO fix salt Enviroment variable
 
             StringBuilder sb = new StringBuilder();
             for (byte b: bytes) {
@@ -59,8 +69,37 @@ public class Utility {
 
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
-		} 
+        }
 
+    }
+
+    /** Checks if str is a full name e.g. no numbers or signs
+     *
+     * @param str String to be checked
+     * @return true if valid else false
+     */
+    public static boolean isValidFullName(String str) {
+        return VALID_FULL_NAME_REGEX.matcher(str).matches();
+    }
+
+    /** Checks if str is a email address e.g. 'x@y.z'
+     *
+     * @param str String to be checked
+     * @return true if valid else false
+     */
+    public static boolean isValidEmail(String str) {
+        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX .matcher(str);
+        return matcher.matches();
+    }
+
+    /** Checks if str is 13-15 numbers
+     *
+     * @param str String to be checked
+     * @return true if valid else false
+     */
+    public static boolean isValidPhone(String str) {
+        Matcher matcher = VALID_PHONE_REGEX .matcher(str);
+        return matcher.matches();
     }
 
 

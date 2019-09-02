@@ -6,7 +6,7 @@ Status codes:
 
 401 "Not logged in" // Redirect to login screen
 
-
+400 "Request not found, try {head:{}, data:{}}"
 412 "User not found"
 413 "Invalid login"
 408 "Login is suspended"
@@ -16,6 +16,9 @@ Status codes:
 434 "Email is required"
 443 "Nickname is taken"
 444 "Email is taken"
+450 "Name isn't valid, try [regex]"
+451 "Phone isn't valid, try [regex]"
+454 "Email isn't valid, try [regex]"
 462 "Unauthorized to delete another's account"
 
 
