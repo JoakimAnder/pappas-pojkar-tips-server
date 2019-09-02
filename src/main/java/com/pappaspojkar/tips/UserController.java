@@ -87,29 +87,6 @@ public class UserController {
 
     }
 
-    @PostMapping("/IsLoggedIn") //TODO remove
-    public String isLoggedIn(String email, String token){
-        if(token.isEmpty()){
-            return "Not logged in";
-        }
-        User user = userRepo.findByEmail(email);
-        if(user == null){
-            return "Not logged in";
-        }
-        if(!token.equals(user.getToken())){
-            return "Not logged in";
-        }
-
-        Long checkTimeStamp = LocalDateTime.now().toEpochSecond(Utility.SERVER_OFFSET);
-        if(user.getTokenLastValidDate() < checkTimeStamp){
-            return "Not logged in";
-        }
-
-        user.setTokenLastValidDate(checkTimeStamp+Utility.SECONDS_UNTIL_AUTOMATIC_LOGOUT);
-        userRepo.save(user);
-        return "logged in";
-    }
-
     @PostMapping("/addUser")
     public Response<User> addUser(@RequestBody Request<User> query){
         User user = query.getData();
@@ -159,68 +136,5 @@ public class UserController {
         return Response.createSuccessfulResponse(user);
 
     }
-
-    @PostMapping("updateUser")
-    public Response<User> updateUser(@RequestBody Request<User> query){
-        int id = query.getHead().getUserId();
-        Optional<User> oUser = userRepo.findById(id);
-
-        if (!oUser.isPresent()) {
-            return Response.createResponse(412, "User not found", false, null);
-        }
-
-        User newUser = query.getData();
-        User user = oUser.get();
-
-        if (isLoggedIn(user.getEmail(), query.getHead().getToken()).equals("Not logged in")) { //TODO fix isLoggedIn
-            return Response.createResponse(401, "Not logged in", false, null);
-        }
-
-        if (userRepo.findByEmail(newUser.getEmail()) != null) {
-            return Response.createResponse(444, "Email is taken", false, user);
-        }
-        if (userRepo.findByNickname(newUser.getNickname()) != null) {
-            return Response.createResponse(443, "Nickname is taken", false, user);
-        }
-        if(newUser.getName() != null)
-            user.setName(newUser.getName());
-        if(newUser.getNickname() != null)
-            user.setNickname(newUser.getNickname());
-        if(newUser.getPhone() != null)
-            user.setPhone(newUser.getPhone());
-        if(newUser.getEmail() != null)
-            user.setEmail(newUser.getEmail());
-
-
-        user = userRepo.save(user);
-
-        return Response.createSuccessfulResponse(user);
-    }
-
-    @PostMapping("deleteUser")
-    public Response<Boolean> delete(@RequestBody Request<Integer> query){
-        int id = query.getHead().getUserId();
-
-        if(id != query.getData())
-            return Response.createResponse(462, "Unauthorized to delete another's account", false, false);
-
-        String token = query.getHead().getToken();
-        Optional<User> oUser = userRepo.findById(id);
-
-
-        if (!oUser.isPresent()) {
-            return Response.createResponse(412, "User not found", false, false);
-        }
-        User user = oUser.get();
-
-        if (isLoggedIn(user.getEmail(), token).equals("Not logged in")) {
-            return Response.createResponse(401, "Not logged in", false, false);
-        }
-
-
-        userRepo.deleteById(id);
-        return Response.createSuccessfulResponse(true);
-    }
-
 
 }
