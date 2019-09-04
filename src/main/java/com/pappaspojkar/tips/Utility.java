@@ -5,14 +5,14 @@
  */
 package com.pappaspojkar.tips;
 
-import java.nio.charset.Charset;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 
 /**
@@ -20,6 +20,9 @@ import java.util.stream.Collectors;
  * @author mehtab
  */
 public class Utility {
+
+    @Autowired
+    private static Environment env;
 
     private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     public static final Integer SECONDS_UNTIL_AUTOMATIC_LOGOUT = 15*60;
@@ -58,7 +61,7 @@ public class Utility {
     public static String MD5Encode(String password) {
         try {
             byte[] bytes = MessageDigest.getInstance("MD5")
-                    .digest(password.concat("salt").getBytes()); //TODO fix salt Enviroment variable
+                    .digest(password.concat(env.getProperty("password.salt", "salt")).getBytes());
 
             StringBuilder sb = new StringBuilder();
             for (byte b: bytes) {
